@@ -1,0 +1,67 @@
+#This script will pull weather data from wunderground.com
+
+Sub weatherData()
+    
+    Sheets("raw data").Visible = True
+    Sheets("raw data").Select
+    Columns("a:w").Select
+    Selection.ClearContents
+            
+        Dim StartMonth As String
+        Dim StartDay As String
+        Dim StartYear As String
+        Dim EndMonth As String
+        Dim EndDay As String
+        Dim EndYear As String
+        Dim AirportCode As String
+            
+        'Sheets("input tab").Select
+        StartMonth = Range("'input tab'!b2")
+        StartDay = Range("'input tab'!c2")
+        StartYear = Range("'input tab'!d2")
+        EndMonth = Range("'input tab'!b3")
+        EndDay = Range("'input tab'!c3")
+        EndYear = Range("'input tab'!d3")
+        AirportCode = Range("'input tab'!c4")
+       
+    With Sheets("raw data").QueryTables.Add(Connection:= _
+        "URL;http://www.wunderground.com/history/airport/" & AirportCode & "/" & StartYear & "/" & StartMonth & "/" & StartDay & "/CustomHistory.html?dayend=" _
+        & EndDay & "&monthend=" & EndMonth & "&yearend= " & EndYear & "&req_city=&req_state=&req_statename=&reqdb.zip=&reqdb.magic=&reqdb.wmo=&MR=1&format=1" _
+        , Destination:=Range("'raw data'!$a$1"))
+        '.Name = _
+        "CustomHistory.html?dayend=1&monthend=10&yearend=2015&req_city=&req_state=&req_statename=&reqdb.zip=&reqdb.magic=&reqdb.wmo=&MR=1&format=1"
+        '.FieldNames = True
+        '.RowNumbers = False
+        '.FillAdjacentFormulas = False
+        '.PreserveFormatting = True
+        '.RefreshOnFileOpen = False
+        .BackgroundQuery = True
+        '.RefreshStyle = xlInsertDeleteCells
+        .AdjustColumnWidth = False
+        .RefreshPeriod = 0
+        .WebSelectionType = xlEntirePage
+        .WebFormatting = xlWebFormattingNone
+        .WebPreFormattedTextToColumns = True
+        .WebConsecutiveDelimitersAsOne = True
+        .WebSingleBlockTextImport = False
+        .WebDisableDateRecognition = False
+        .WebDisableRedirections = False
+        .Refresh BackgroundQuery:=False
+    
+    
+    End With
+    
+    Sheets("raw data").Select
+    Columns("a:a").Select
+    Selection.TextToColumns Destination:=Range("A1"), DataType:=xlDelimited, _
+        TextQualifier:=xlDoubleQuote, ConsecutiveDelimiter:=False, Tab:=True, _
+        Semicolon:=False, Comma:=True, Space:=False, Other:=False, OtherChar _
+        :="-", FieldInfo:=Array(Array(1, 1), Array(2, 1), Array(3, 1), Array(4, 1), Array(5, _
+        1), Array(6, 1), Array(7, 1), Array(8, 1), Array(9, 1), Array(10, 1), Array(11, 1), Array(12 _
+        , 1), Array(13, 1), Array(14, 1), Array(15, 1), Array(16, 1), Array(17, 1), Array(18, 1), _
+        Array(19, 1), Array(20, 1), Array(21, 1), Array(22, 1), Array(23, 1)), _
+        TrailingMinusNumbers:=True
+         
+        Sheets("weather data").Select
+        Sheets("raw data").Visible = False
+End Sub
