@@ -1,0 +1,138 @@
+# This script will collect several .csv worksheets from several Insight trend logs, to one master sheet
+
+Sub MergeAllWorkbooks()
+    Dim SummarySheet As Worksheet
+    Dim FolderPath As String
+    Dim NRow As Long
+    Dim FileName As String
+    Dim WorkBk As Workbook
+    Dim SourceRange As Range
+    Dim DestRange As Range
+    Dim LastCell As String
+    Dim rng As Range
+    Dim FD As FileDialog
+    Dim Folder As String
+    Dim fname
+               
+    Application.StatusBar = Status
+    Application.DisplayAlerts = False
+    
+    ' Create a new workbook and set a variable to the first sheet.
+    Set SummarySheet = Workbooks.Add(xlWBATWorksheet).Worksheets(1)
+    
+    ' Popup box that selects Folder Path to run loop
+    MsgBox "Select folder with all .csv files"
+    Set FD = Application.FileDialog(msoFileDialogFolderPicker)
+    FD.AllowMultiSelect = False
+    Folder = FD.Show
+    FolderPath = (FD.SelectedItems(1) & "\")
+    'Range("a1").Value = FolderPath
+    
+    ' Modify this folder path to point to the files you want to use.
+    'FolderPath = "D:\Users\hartinge\Energy Engineer\_Customers\HHMI CAP+\2015 - 12\AppSubRep\"
+    
+    ' NRow keeps track of where to insert new rows in the destination workbook.
+    NRow = 1
+    
+    ' Call Dir the first time, pointing it to all Excel files in the folder path.
+    FileName = Dir(FolderPath & "*.csv*")
+    
+    ' Hide the application run
+    Application.ScreenUpdating = False
+    
+    ' Loop until Dir returns an empty string.
+    Do While FileName <> ""
+        ' Open a workbook in the folder
+        Set WorkBk = Workbooks.Open(FolderPath & FileName)
+
+        ' Finds the last cell in the range to copy
+        LastCell = Range("a1").SpecialCells(xlCellTypeLastCell).Address
+
+        ' Sets the source range for copy
+        Set SourceRange = WorkBk.Worksheets(1).Range("A1:" & LastCell)
+
+        ' Set the destination range to start at column B and
+        ' be the same size as the source range.
+        Set DestRange = SummarySheet.Range("A" & NRow)
+        Set DestRange = DestRange.Resize(SourceRange.Rows.Count, SourceRange.Columns.Count)
+
+        ' Copy over the values from the source to the destination.
+        DestRange.Value = SourceRange.Value
+
+        ' Increase NRow so that we know where to copy data next.
+        NRow = NRow + DestRange.Rows.Count
+
+        ' Close the source workbook without saving changes.
+        WorkBk.Close savechanges:=False
+        
+        ' Use Dir to get the next file name.
+        FileName = Dir()
+    Loop
+
+    ' Save-as function
+    MsgBox "Save file as .csv"
+    fname = Application.GetSaveAsFilename(InitialFileName:="", FileFilter:="CSV (Comma delimited) (*.csv), *.csv", Title:="Save As")
+    ActiveWorkbook.saveas FileName:=fname, FileFormat:=6
+End Sub
+Function Last(choice As Long, rng As Range)
+' 1 = last row
+' 2 = last column
+' 3 = last cell
+    Dim lrw As Long
+    Dim lcol As Long
+
+    Select Case choice
+
+    Case 1:
+        On Error Resume Next
+        Last = rng.Find(What:="*", _
+                        After:=rng.Cells(1), _
+                        Lookat:=xlPart, _
+                        LookIn:=xlFormulas, _
+                        SearchOrder:=xlByRows, _
+                        SearchDirection:=xlPrevious, _
+                        MatchCase:=False).Row
+        On Error GoTo 0
+
+    Case 2:
+        On Error Resume Next
+        Last = rng.Find(What:="*", _
+                        After:=rng.Cells(1), _
+                        Lookat:=xlPart, _
+                        LookIn:=xlFormulas, _
+                        SearchOrder:=xlByColumns, _
+                        SearchDirection:=xlPrevious, _
+                        MatchCase:=False).Column
+        On Error GoTo 0
+
+    Case 3:
+        On Error Resume Next
+        lrw = rng.Find(What:="*", _
+                       After:=rng.Cells(1), _
+                       Lookat:=xlPart, _
+                       LookIn:=xlFormulas, _
+                       SearchOrder:=xlByRows, _
+                       SearchDirection:=xlPrevious, _
+                       MatchCase:=False).Row
+        On Error GoTo 0
+
+        On Error Resume Next
+        lcol = rng.Find(What:="*", _
+                        After:=rng.Cells(1), _
+                        Lookat:=xlPart, _
+                        LookIn:=xlFormulas, _
+                        SearchOrder:=xlByColumns, _
+                        SearchDirection:=xlPrevious, _
+                        MatchCase:=False).Column
+        On Error GoTo 0
+
+        On Error Resume Next
+        Last = rng.Parent.Cells(lrw, lcol).Address(False, False)
+        If Err.Number > 0 Then
+            Last = rng.Cells(1).Address(False, False)
+            Err.Clear
+        End If
+        On Error GoTo 0
+
+    End Select
+End Function
